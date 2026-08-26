@@ -1,0 +1,81 @@
+/* Maps the design tokens onto Tailwind's theme namespaces, so that utilities
+   like bg-surface, text-muted, border-line and text-lead exist and resolve to
+   token values. Nothing here introduces a value of its own. */
+
+/* Clear the stock palette and type scale first. Tailwind's defaults are not
+   this design's, and leaving them in place means `bg-red-500` or `text-sm`
+   compiles into something plausible-looking but off-system.
+
+   Cleared, those utilities emit no CSS at all, so the mistake shows up as an
+   unstyled element rather than a wrong-but-believable colour. It is not a build
+   error, and it does not stop an arbitrary value like `bg-[#ff0000]` — that is
+   what scripts/check-no-literal-colours.mjs is for. */
+@theme {
+  --color-*: initial;
+  --text-*: initial;
+}
+
+/* `inline` is load-bearing, not stylistic. Without it Tailwind emits
+   `--color-surface: var(--pl-surface)` once at :root, which pins the value to
+   the root theme; utilities would then ignore a nested [data-theme] scope.
+   With it, `.bg-surface` emits `var(--pl-surface)` directly and resolves
+   against whichever theme scope the element sits in. The preview route depends
+   on this. */
+@theme inline {
+  --color-transparent: transparent;
+  --color-current:     currentColor;
+
+  --color-canvas:        var(--pl-canvas);
+  --color-surface:       var(--pl-surface);
+  --color-sunk:          var(--pl-surface-sunk);
+  --color-line:          var(--pl-line);
+  --color-line-soft:     var(--pl-line-soft);
+  --color-ink:           var(--pl-ink);
+  --color-ink-2:         var(--pl-ink-2);
+  --color-muted:         var(--pl-muted);
+  --color-faint:         var(--pl-faint);
+
+  --color-accent:        var(--pl-accent);
+  --color-accent-strong: var(--pl-accent-strong);
+  --color-accent-edge:   var(--pl-accent-edge);
+  --color-accent-wash:   var(--pl-accent-wash);
+  --color-on-accent:     var(--pl-on-accent);
+
+  --color-warn:          var(--pl-warn);
+  --color-warn-text:     var(--pl-warn-text);
+  --color-warn-edge:     var(--pl-warn-edge);
+  --color-on-warn:       var(--pl-on-warn);
+
+  --font-sans: var(--pl-font-sans);
+  --font-mono: var(--pl-font-mono);
+
+  --text-micro:      var(--pl-text-micro);
+  --text-meta:       var(--pl-text-meta);
+  --text-caption:    var(--pl-text-caption);
+  --text-fine:       var(--pl-text-fine);
+  --text-body:       var(--pl-text-body);
+  --text-body-lg:    var(--pl-text-body-lg);
+  --text-lead:       var(--pl-text-lead);
+  --text-title:      var(--pl-text-title);
+  --text-display:    var(--pl-text-display);
+  --text-display-lg: var(--pl-text-display-lg);
+
+  --text-body--line-height:       var(--pl-leading-body);
+  --text-body-lg--line-height:    var(--pl-leading-body);
+  --text-lead--line-height:       var(--pl-leading-body);
+  --text-title--line-height:      var(--pl-leading-tight);
+  --text-display--line-height:    var(--pl-leading-tight);
+  --text-display-lg--line-height: var(--pl-leading-tight);
+
+  --leading-tight: var(--pl-leading-tight);
+  --leading-body:  var(--pl-leading-body);
+
+  --tracking-eyebrow: var(--pl-tracking-eyebrow);
+  --tracking-meta:    var(--pl-tracking-meta);
+  --tracking-brand:   var(--pl-tracking-brand);
+  --tracking-tight:   var(--pl-tracking-tight);
+
+  --spacing: var(--pl-space-base);
+
+  --radius-field: var(--pl-radius-field);
+}

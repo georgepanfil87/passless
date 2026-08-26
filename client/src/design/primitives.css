@@ -1,0 +1,98 @@
+/* The only shared component classes in the system. Everything else is
+   utilities in templates — two primitives earn their place because they carry
+   meaning (a machine-derived label, a text input) rather than a look. */
+
+@layer base {
+  html {
+    background: var(--pl-canvas);
+    color: var(--pl-ink);
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--pl-font-sans);
+    font-size: var(--pl-text-body);
+    line-height: var(--pl-leading-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a {
+    color: var(--pl-ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  a:hover {
+    color: var(--pl-accent-strong);
+  }
+
+  /* Never removed. The accent is the affordance colour, so focus reads as
+     "interactive" rather than "alarming". */
+  *:focus-visible {
+    outline: var(--pl-focus-ring);
+    outline-offset: var(--pl-focus-offset);
+    border-radius: var(--pl-radius-field);
+  }
+}
+
+@layer components {
+  /* Monospace + tracking is the system's signal for "this value came from the
+     machine, not from a copywriter". */
+  .pl-eyebrow {
+    font-family: var(--pl-font-mono);
+    font-size: var(--pl-text-micro);
+    letter-spacing: var(--pl-tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--pl-muted);
+  }
+
+  .pl-field {
+    font-family: var(--pl-font-mono);
+    font-size: var(--pl-text-body);
+    color: var(--pl-ink);
+    background: var(--pl-surface-sunk);
+    border: 1px solid var(--pl-line);
+    border-radius: var(--pl-radius-field);
+    padding: 11px 12px;
+    width: 100%;
+  }
+
+  /* Opens a theme scope: paints its own ground so a light panel inside a dark
+     page (or the reverse) is self-contained. */
+  .pl-theme-scope {
+    background: var(--pl-canvas);
+    color: var(--pl-ink);
+  }
+}
+
+@layer utilities {
+  /* Durations come from tokens so that prefers-reduced-motion has one place to
+     act. Writing `animate-[pl-breathe_3.2s_…]` in a template would hardcode the
+     duration and route around the token entirely. */
+  .pl-breathe {
+    animation: pl-breathe var(--pl-ceremony-duration) var(--pl-ease-calm) infinite;
+  }
+
+  .pl-breathe-in {
+    animation: pl-breathe-in var(--pl-ceremony-duration) var(--pl-ease-calm) infinite;
+  }
+
+  .pl-scan {
+    animation: pl-scan var(--pl-scan-duration) var(--pl-ease-scan) infinite;
+  }
+}
+
+@keyframes pl-breathe {
+  0%, 100% { transform: scale(1);    opacity: .30; }
+  50%      { transform: scale(1.28); opacity: .06; }
+}
+
+@keyframes pl-breathe-in {
+  0%, 100% { transform: scale(1);    opacity: .85; }
+  50%      { transform: scale(1.06); opacity: 1; }
+}
+
+@keyframes pl-scan {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(320%); }
+}

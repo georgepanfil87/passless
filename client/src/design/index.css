@@ -1,0 +1,5 @@
+/* Single entry point for the design system. Import this and nothing else. */
+@import './tokens.css';
+@import 'tailwindcss';
+@import './theme.css';
+@import './primitives.css';

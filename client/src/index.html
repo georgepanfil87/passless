@@ -6,6 +6,34 @@
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+
+    <!--
+      Fonts are loaded from Google here for development convenience only. A
+      production build should self-host them: a third party otherwise sees a
+      request on every page load of an authentication screen, and the CSP has to
+      be widened to allow it.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" />
+
+    <script>
+      // Resolve the theme before first paint so a dark-mode user never sees a
+      // light flash. ThemeService reads this attribute back rather than
+      // recomputing, so the two cannot disagree.
+      (function () {
+        try {
+          var t = localStorage.getItem('pl-theme');
+          if (t !== 'light' && t !== 'dark') {
+            t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
   </head>
   <body>
     <app-root></app-root>
