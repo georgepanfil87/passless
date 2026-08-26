@@ -1,0 +1,199 @@
+/* Passless design tokens — the only place in the codebase where a colour is
+   named. Components reach these through the Tailwind mapping in theme.css and
+   must never contain a literal colour value.
+
+   Two tiers, deliberately:
+
+     Tier 1 (--pl-c-*)  the palette. Fixed hues, theme-independent.
+     Tier 2 (--pl-*)    roles. Which palette entry plays which part, per theme.
+
+   The indirection exists so that a theme is a re-mapping of roles rather than a
+   second copy of the palette. Without it, every light hex would have to be
+   repeated in a [data-theme='light'] block to make nested theme scopes work,
+   and the "single source of truth" claim would quietly become two.  */
+
+:root {
+  /* ══ Tier 1: palette ═══════════════════════════════════════════════ */
+
+  /* Warm paper — light-mode surfaces. */
+  --pl-c-paper-0:    #FFFFFF;
+  --pl-c-paper-1:    #F4F4F1;
+  --pl-c-paper-2:    #F2F2EF;
+  --pl-c-paper-3:    #EDEDE8;
+  --pl-c-paper-4:    #DEDED8;
+
+  /* Graphite — dark-mode surfaces, and light-mode text. */
+  --pl-c-graphite-0:  #0A0C0D;
+  --pl-c-graphite-1:  #0C0E0F;
+  --pl-c-graphite-2:  #111415;
+  --pl-c-graphite-3:  #16191A;
+  --pl-c-graphite-4:  #1B1F21;
+  --pl-c-graphite-5:  #23282A;
+  --pl-c-graphite-6:  #33393B;
+  --pl-c-graphite-7:  #5B6265;
+  --pl-c-graphite-8:  #6E7477;
+  --pl-c-graphite-9:  #8B9497;
+  --pl-c-graphite-10: #D3D8D9;
+  --pl-c-graphite-11: #F2F4F3;
+
+  /* Teal — interactive affordance and identity. Never risk. */
+  --pl-c-teal-deep:      #04231F;
+  --pl-c-teal-wash-dark: #15302E;
+  --pl-c-teal-strong:    #00857A;
+  --pl-c-teal-edge:      #009C90;
+  --pl-c-teal-edge-lift: #23A899;
+  --pl-c-teal-base:      #00B8A9;
+  --pl-c-teal-lift:      #2FD4C4;
+  --pl-c-teal-wash:      #EAF7F5;
+
+  /* Amber — reserved for security consequence. See theme.css and DESIGN.md. */
+  --pl-c-amber-deep: #231000;
+  --pl-c-amber-text: #B84A00;
+  --pl-c-amber-edge: #E06400;
+  --pl-c-amber-base: #FF7A18;
+  --pl-c-amber-lift: #FF9B54;
+
+  /* ══ Tier 2 (light) ════════════════════════════════════════════════ */
+  color-scheme: light;
+
+  --pl-canvas:        var(--pl-c-paper-2);
+  --pl-surface:       var(--pl-c-paper-0);
+  --pl-surface-sunk:  var(--pl-c-paper-1);
+  --pl-line:          var(--pl-c-paper-4);
+  --pl-line-soft:     var(--pl-c-paper-3);
+  --pl-ink:           var(--pl-c-graphite-1);
+  --pl-ink-2:         var(--pl-c-graphite-6);
+  --pl-muted:         var(--pl-c-graphite-7);
+  --pl-faint:         var(--pl-c-graphite-8);
+
+  --pl-accent:        var(--pl-c-teal-base);
+  --pl-accent-strong: var(--pl-c-teal-strong);
+  --pl-accent-edge:   var(--pl-c-teal-edge);
+  --pl-accent-wash:   var(--pl-c-teal-wash);
+  --pl-on-accent:     var(--pl-c-teal-deep);
+
+  --pl-warn:          var(--pl-c-amber-base);
+  --pl-warn-text:     var(--pl-c-amber-text);
+  --pl-warn-edge:     var(--pl-c-amber-edge);
+  --pl-on-warn:       var(--pl-c-amber-deep);
+
+  /* ══ Dimensions — identical in both themes ═════════════════════════ */
+
+  /* 4px base. Tailwind generates every multiple from --pl-space-base; the
+     named steps below are the rhythm the design actually uses. */
+  --pl-space-base: 4px;
+  --pl-space-1: 4px;  --pl-space-2: 8px;  --pl-space-3: 12px;
+  --pl-space-4: 16px; --pl-space-5: 20px; --pl-space-6: 26px;
+  --pl-space-7: 32px; --pl-space-8: 40px; --pl-space-9: 56px;
+
+  /* Square by default. 2px belongs to text inputs and nothing else; the only
+     round forms in the product are the ceremony halo and the status dots. */
+  --pl-radius-field: 2px;
+
+  --pl-font-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --pl-font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+
+  --pl-text-micro:      10px;
+  --pl-text-meta:       11px;
+  --pl-text-caption:    12px;
+  --pl-text-fine:       13px;
+  --pl-text-body:       14px;
+  --pl-text-body-lg:    15px;
+  --pl-text-lead:       17px;
+  --pl-text-title:      20px;
+  --pl-text-display:    26px;
+  --pl-text-display-lg: 28px;
+
+  --pl-leading-tight: 1.25;
+  --pl-leading-body:  1.6;
+
+  --pl-tracking-eyebrow: 0.16em;
+  --pl-tracking-meta:    0.1em;
+  --pl-tracking-brand:   0.24em;
+  --pl-tracking-tight:   -0.015em;
+
+  /* Slow enough to read as calm, never as stalled. */
+  --pl-ceremony-duration: 3200ms;
+  --pl-scan-duration:     1400ms;
+  --pl-ease-calm: cubic-bezier(.37, 0, .63, 1);
+  --pl-ease-scan: cubic-bezier(.4, 0, .2, 1);
+
+  --pl-focus-ring:   2px solid var(--pl-accent);
+  --pl-focus-offset: 3px;
+}
+
+/* An attribute selector rather than :root[data-theme] so that any element can
+   open a theme scope. That is what lets the preview route show both themes on
+   one page, and it costs nothing in the app, where only <html> carries it. */
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --pl-canvas:        var(--pl-c-graphite-0);
+  --pl-surface:       var(--pl-c-graphite-2);
+  --pl-surface-sunk:  var(--pl-c-graphite-3);
+  --pl-line:          var(--pl-c-graphite-5);
+  --pl-line-soft:     var(--pl-c-graphite-4);
+  --pl-ink:           var(--pl-c-graphite-11);
+  --pl-ink-2:         var(--pl-c-graphite-10);
+
+  /* Known asymmetry: light draws a distinction between --pl-muted and
+     --pl-faint that dark does not. Kept as the design shipped it rather than
+     invented here; see DESIGN.md, "Known asymmetries". */
+  --pl-muted:         var(--pl-c-graphite-9);
+  --pl-faint:         var(--pl-c-graphite-9);
+
+  /* Lifted for contrast on near-black. --pl-accent-strong exists in light to
+     reach AA as small text; on this surface the base hue already does, so both
+     roles resolve to the same value. */
+  --pl-accent:        var(--pl-c-teal-lift);
+  --pl-accent-strong: var(--pl-c-teal-lift);
+  --pl-accent-edge:   var(--pl-c-teal-edge-lift);
+  --pl-accent-wash:   var(--pl-c-teal-wash-dark);
+  --pl-on-accent:     var(--pl-c-teal-deep);
+
+  /* The hue itself does not move between themes: the warning must be
+     recognisably the same signal. Only its text tint changes direction,
+     lightening here where it darkens in light. */
+  --pl-warn:          var(--pl-c-amber-base);
+  --pl-warn-text:     var(--pl-c-amber-lift);
+  --pl-warn-edge:     var(--pl-c-amber-base);
+  --pl-on-warn:       var(--pl-c-amber-deep);
+}
+
+/* Declared explicitly so a light scope nested inside a dark one resolves,
+   which the preview route relies on. Same specificity as the dark block, so
+   whichever attribute is on the element wins. */
+[data-theme='light'] {
+  color-scheme: light;
+
+  --pl-canvas:        var(--pl-c-paper-2);
+  --pl-surface:       var(--pl-c-paper-0);
+  --pl-surface-sunk:  var(--pl-c-paper-1);
+  --pl-line:          var(--pl-c-paper-4);
+  --pl-line-soft:     var(--pl-c-paper-3);
+  --pl-ink:           var(--pl-c-graphite-1);
+  --pl-ink-2:         var(--pl-c-graphite-6);
+  --pl-muted:         var(--pl-c-graphite-7);
+  --pl-faint:         var(--pl-c-graphite-8);
+
+  --pl-accent:        var(--pl-c-teal-base);
+  --pl-accent-strong: var(--pl-c-teal-strong);
+  --pl-accent-edge:   var(--pl-c-teal-edge);
+  --pl-accent-wash:   var(--pl-c-teal-wash);
+  --pl-on-accent:     var(--pl-c-teal-deep);
+
+  --pl-warn:          var(--pl-c-amber-base);
+  --pl-warn-text:     var(--pl-c-amber-text);
+  --pl-warn-edge:     var(--pl-c-amber-edge);
+  --pl-on-warn:       var(--pl-c-amber-deep);
+}
+
+/* Zeroing the duration is enough to stop the ceremony animations, because they
+   read their duration from this token rather than hardcoding it. One mechanism,
+   not two. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --pl-ceremony-duration: 0ms;
+    --pl-scan-duration: 0ms;
+  }
+}

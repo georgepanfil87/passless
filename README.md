@@ -183,6 +183,10 @@ equivalent in Firefox or WebKit.
 npm --prefix client test
 ```
 
+The client also serves a design preview at `/preview`, which renders every base
+component in both themes from a single component tree. The visual rationale and
+the full token reference are in [docs/DESIGN.md](docs/DESIGN.md).
+
 Every ceremony will have at least one test asserting that the failure case is
 *rejected*. A suite that only proves the happy path works tells you nothing about
 whether the security control exists at all.
