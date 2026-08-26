@@ -1,0 +1,43 @@
+# ---- .NET -----------------------------------------------------------------
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+*.userprefs
+.vs/
+TestResults/
+*.trx
+*.coverage
+coverage/
+*.received.*
+
+# ---- Node / Angular -------------------------------------------------------
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ---- Playwright -----------------------------------------------------------
+playwright-report/
+test-results/
+.playwright/
+
+# ---- Local secrets and TLS material ---------------------------------------
+# certs/ has its own .gitignore; these catch strays elsewhere in the tree.
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+*.key
+*.pem
+
+# ---- OS / editor ----------------------------------------------------------
+.DS_Store
+Thumbs.db
+*.swp
+.idea/

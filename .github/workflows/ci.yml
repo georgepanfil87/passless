@@ -1,0 +1,32 @@
+name: CI
+
+# Skeleton. Triggers are wired so that the workflow is valid and visible from
+# the first commit; the jobs land with the code they are meant to guard.
+#
+# Planned jobs:
+#   build      -- restore, build with warnings as errors, verify formatting
+#   test       -- integration suite against Testcontainers Postgres + Redis
+#   e2e        -- Playwright, Chromium, CDP virtual authenticator
+#   client     -- Angular lint, unit tests, production build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Least privilege by default: jobs that need more say so explicitly.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  placeholder:
+    name: No checks configured yet
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "CI jobs land with the code they guard."

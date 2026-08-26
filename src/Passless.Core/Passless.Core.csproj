@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <!-- Deliberately no package references. The domain model must stay
+       expressible without EF Core, ASP.NET or Fido2NetLib in scope, so that
+       the security rules can be unit-tested with nothing running. -->
+
+</Project>
