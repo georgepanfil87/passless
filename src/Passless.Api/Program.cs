@@ -1,8 +1,16 @@
 using System.Security.Cryptography.X509Certificates;
+using Passless.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 UseLocalCertificateIfPresent(builder);
+
+builder.Services.AddDbContext<PasslessDbContext>(options =>
+    options.UsePassless(
+        builder.Configuration.GetConnectionString("Postgres")
+        ?? throw new InvalidOperationException(
+            "ConnectionStrings:Postgres is not configured. Development values live in "
+            + "appsettings.Development.json; every other environment supplies it out of band.")));
 
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
@@ -12,9 +20,10 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
-// Liveness only, on purpose. A readiness probe that reports "healthy" without
-// checking the database and Redis is worse than no probe at all, so the
-// dependency checks land with the dependencies.
+// Liveness only, still. The database is now wired but nothing serves traffic
+// from it yet, and a probe that reports "healthy" on the strength of a
+// connection the application never uses is worse than no probe at all. The
+// readiness checks land with the endpoints that depend on them.
 app.MapHealthChecks("/health");
 
 app.Run();

@@ -1,19 +1,23 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Passless.Infrastructure;
 using Testcontainers.PostgreSql;
 using Testcontainers.Redis;
 
 namespace Passless.IntegrationTests;
 
 /// <summary>
-/// Owns the real Postgres and Redis instances the suite runs against.
+/// Owns the real Postgres and Redis instances the suite runs against, and
+/// applies the migrations to an empty database once per run.
 /// </summary>
 /// <remarks>
 /// No in-memory provider and no mocked cache. The behaviour under test is
-/// largely unique constraints, transaction isolation and atomic Redis
-/// operations -- precisely the things a fake gets right by pretending. A test
-/// that proves refresh-token reuse is detected is worthless if the store it
-/// ran against could not have raced in the first place.
+/// largely unique constraints, referential actions and a plpgsql trigger --
+/// precisely the things a fake gets right by pretending. A test proving that
+/// audit rows cannot be updated is worthless against a provider that has no
+/// triggers to begin with.
 /// </remarks>
 public sealed class PasslessFixture : IAsyncLifetime
 {
@@ -28,6 +32,8 @@ public sealed class PasslessFixture : IAsyncLifetime
     public PasslessApiFactory Api =>
         _api ?? throw new InvalidOperationException("Fixture has not been initialised.");
 
+    public string PostgresConnectionString => _postgres.GetConnectionString();
+
     public async Task InitializeAsync()
     {
         // Started together: container startup dominates the wall-clock time of
@@ -35,6 +41,14 @@ public sealed class PasslessFixture : IAsyncLifetime
         await Task.WhenAll(_postgres.StartAsync(), _redis.StartAsync());
 
         _api = new PasslessApiFactory(_postgres.GetConnectionString(), _redis.GetConnectionString());
+
+        // Migrating through the application's own service provider, rather than
+        // building a context here, means the suite exercises the registration
+        // the API actually ships. A context configured separately could differ
+        // in naming convention and still pass every test.
+        await using var scope = CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PasslessDbContext>();
+        await database.Database.MigrateAsync();
     }
 
     public async Task DisposeAsync()
@@ -46,6 +60,8 @@ public sealed class PasslessFixture : IAsyncLifetime
 
         await Task.WhenAll(_postgres.DisposeAsync().AsTask(), _redis.DisposeAsync().AsTask());
     }
+
+    public AsyncServiceScope CreateScope() => Api.Services.CreateAsyncScope();
 }
 
 /// <summary>
