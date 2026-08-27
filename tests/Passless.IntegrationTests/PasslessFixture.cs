@@ -34,6 +34,16 @@ public sealed class PasslessFixture : IAsyncLifetime
 
     public string PostgresConnectionString => _postgres.GetConnectionString();
 
+    public string RedisConnectionString => _redis.GetConnectionString();
+
+    /// <summary>
+    /// A second host over the same containers, with configuration overridden.
+    /// Used by the expiry test, which needs a challenge TTL short enough to wait
+    /// out. The caller owns the returned factory.
+    /// </summary>
+    public PasslessApiFactory CreateApi(IReadOnlyDictionary<string, string> settings) =>
+        new(_postgres.GetConnectionString(), _redis.GetConnectionString(), settings);
+
     public async Task InitializeAsync()
     {
         // Started together: container startup dominates the wall-clock time of
@@ -67,9 +77,17 @@ public sealed class PasslessFixture : IAsyncLifetime
 /// <summary>
 /// Boots the shipping host with the throwaway containers wired in.
 /// </summary>
-public sealed class PasslessApiFactory(string postgresConnectionString, string redisConnectionString)
+public sealed class PasslessApiFactory(
+    string postgresConnectionString,
+    string redisConnectionString,
+    IReadOnlyDictionary<string, string>? settings = null)
     : WebApplicationFactory<Program>
 {
+    /// <summary>The single origin these tests are allowed to run ceremonies from.</summary>
+    public const string Origin = "https://localhost:4200";
+
+    public const string RelyingPartyId = "localhost";
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         // "Testing" rather than "Development": the development branch loads a
@@ -78,6 +96,33 @@ public sealed class PasslessApiFactory(string postgresConnectionString, string r
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:Postgres", postgresConnectionString);
         builder.UseSetting("ConnectionStrings:Redis", redisConnectionString);
+
+        builder.UseSetting("WebAuthn:RelyingPartyId", RelyingPartyId);
+        builder.UseSetting("WebAuthn:RelyingPartyName", "Passless (tests)");
+        builder.UseSetting("WebAuthn:Origins:0", Origin);
+        builder.UseSetting("WebAuthn:ChallengeTimeToLive", "00:02:00");
+
+        foreach (var (key, value) in settings ?? new Dictionary<string, string>())
+        {
+            builder.UseSetting(key, value);
+        }
+    }
+
+    /// <summary>
+    /// A client with no cookie container, on an https base address.
+    ///
+    /// Deliberately not the cookie-managing client. These tests replay
+    /// ceremonies, submit the same handle twice at once, and send handles that
+    /// were never issued; with a container in the chain a request can carry a
+    /// stored cookie *in addition* to the one the test attached, and a test that
+    /// means to send a bogus handle quietly sends a valid one too. Every request
+    /// here carries exactly the cookie its test names, and nothing else.
+    /// </summary>
+    public HttpClient CreateCeremonyClient()
+    {
+        var client = Server.CreateClient();
+        client.BaseAddress = new Uri("https://localhost");
+        return client;
     }
 }
 

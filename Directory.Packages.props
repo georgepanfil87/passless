@@ -13,6 +13,8 @@
     </PackageVersion>
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.30" />
     <PackageVersion Include="EFCore.NamingConventions" Version="8.0.3" />
+    <PackageVersion Include="Fido2" Version="4.0.1" />
+    <PackageVersion Include="StackExchange.Redis" Version="3.1.31" />
     <!-- Pinned explicitly. Npgsql 8.0.11 depends on EF Core >= 8.0.11 while the
          Design package brings 8.0.30, and without a pin the two projects compile
          against different assembly versions of the same library. -->
