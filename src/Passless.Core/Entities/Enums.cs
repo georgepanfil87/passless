@@ -36,6 +36,8 @@ public enum AuditEventType
 
     ChallengeIssued,
     ChallengeRejected,
+    /// <summary>A registration ceremony was refused; metadata carries the reason.</summary>
+    RegistrationRejected,
     AssertionRejected,
     /// <summary>Presented counter did not exceed the stored one — possible clone.</summary>
     SignCounterRegression,

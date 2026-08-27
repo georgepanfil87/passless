@@ -32,9 +32,10 @@ Four things, each of which is the reason the repository exists:
    CDP virtual authenticator, so both the happy path and the rejection paths are
    covered without a human touching a fingerprint sensor.
 
-> **Status: scaffolding.** None of the four is implemented yet. This section
-> describes the target, and each item gets a link to its code and its tests as it
-> lands.
+> **Status: in progress.** The registration half of (1) is implemented —
+> ceremony, single-use challenges, explicit origin and RP ID validation, and the
+> authenticator metadata behind (3). Assertion, (2) and (4) are not built yet.
+> Each item gets a link to its code and its tests as it lands.
 
 ## Security properties
 
