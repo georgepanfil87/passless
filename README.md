@@ -196,7 +196,8 @@ whether the security control exists at all.
 | Path                              | What it is                                     |
 | --------------------------------- | ---------------------------------------------- |
 | `src/Passless.Core`               | Domain model. No framework dependencies.       |
-| `src/Passless.Api`                | Minimal API host, endpoints, persistence.      |
+| `src/Passless.Infrastructure`     | EF Core context, configurations, migrations.   |
+| `src/Passless.Api`                | Minimal API host and endpoints.                |
 | `tests/Passless.IntegrationTests` | xUnit and Testcontainers.                      |
 | `tests/Passless.E2ETests`         | Playwright and the CDP virtual authenticator.  |
 | `client/`                         | Angular 21, standalone, zoneless, Tailwind.    |

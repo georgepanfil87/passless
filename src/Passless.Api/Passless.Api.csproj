@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Passless.Core/Passless.Core.csproj" />
+    <ProjectReference Include="..\Passless.Infrastructure\Passless.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
