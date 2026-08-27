@@ -28,6 +28,19 @@ internal sealed class WebAuthnOptionsValidator : IValidateOptions<WebAuthnOption
             failures.Add("WebAuthn:ChallengeTimeToLive must be positive.");
         }
 
+        if (string.IsNullOrWhiteSpace(options.DecoyKey))
+        {
+            failures.Add("WebAuthn:DecoyKey must be set to a base64 value of at least 32 bytes.");
+        }
+        else if (!TryDecodeKey(options.DecoyKey, out var keyLength))
+        {
+            failures.Add("WebAuthn:DecoyKey is not valid base64.");
+        }
+        else if (keyLength < 32)
+        {
+            failures.Add($"WebAuthn:DecoyKey decodes to {keyLength} bytes; at least 32 are required.");
+        }
+
         foreach (var origin in options.Origins)
         {
             if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
@@ -56,6 +69,18 @@ internal sealed class WebAuthnOptionsValidator : IValidateOptions<WebAuthnOption
         return failures.Count == 0
             ? ValidateOptionsResult.Success
             : ValidateOptionsResult.Fail(failures);
+    }
+
+    private static bool TryDecodeKey(string value, out int length)
+    {
+        Span<byte> buffer = stackalloc byte[64];
+        if (Convert.TryFromBase64String(value, buffer, out length))
+        {
+            return true;
+        }
+
+        length = 0;
+        return false;
     }
 
     private static bool IsRelyingPartyIdValidFor(string relyingPartyId, string host)

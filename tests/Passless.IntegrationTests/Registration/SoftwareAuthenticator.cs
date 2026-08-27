@@ -50,7 +50,10 @@ internal sealed class SoftwareAuthenticator
             ["crossOrigin"] = false,
         });
 
-        var authenticatorData = BuildAuthenticatorData(relyingPartyIdOverride ?? options.Rp.Id);
+        var authenticatorData = BuildAuthenticatorData(
+            relyingPartyIdOverride ?? options.Rp.Id,
+            SignCount,
+            includeAttestedCredentialData: true);
 
         return new AuthenticatorAttestationRawResponse
         {
@@ -67,7 +70,69 @@ internal sealed class SoftwareAuthenticator
         };
     }
 
-    private byte[] BuildAuthenticatorData(string relyingPartyId)
+    /// <summary>
+    /// Signs an assertion. This is the half that needs a real signature: the
+    /// "none" attestation used at registration carries no statement to sign,
+    /// but an assertion is a signature over authenticatorData concatenated with
+    /// the SHA-256 of clientDataJSON, and the server verifies it against the
+    /// stored public key.
+    /// </summary>
+    /// <param name="signCount">
+    /// Set by the caller rather than tracked here, so a test can present a
+    /// counter that has gone backwards without the authenticator having to
+    /// misbehave.
+    /// </param>
+    public AuthenticatorAssertionRawResponse Assert(
+        AssertionOptions options,
+        string origin,
+        Guid userHandle,
+        uint signCount,
+        string? relyingPartyIdOverride = null,
+        string ceremonyType = "webauthn.get")
+    {
+        var clientDataJson = JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, object>
+        {
+            ["type"] = ceremonyType,
+            ["challenge"] = Base64Url(options.Challenge),
+            ["origin"] = origin,
+            ["crossOrigin"] = false,
+        });
+
+        var authenticatorData = BuildAuthenticatorData(
+            relyingPartyIdOverride ?? options.RpId ?? throw new InvalidOperationException("Assertion options carry no RP ID."),
+            signCount,
+            includeAttestedCredentialData: false);
+
+        var signedPayload = new byte[authenticatorData.Length + 32];
+        authenticatorData.CopyTo(signedPayload, 0);
+        SHA256.HashData(clientDataJson).CopyTo(signedPayload, authenticatorData.Length);
+
+        return new AuthenticatorAssertionRawResponse
+        {
+            Id = Base64Url(CredentialId),
+            RawId = CredentialId,
+            Type = PublicKeyCredentialType.PublicKey,
+            Response = new AuthenticatorAssertionRawResponse.AssertionResponse
+            {
+                AuthenticatorData = authenticatorData,
+                ClientDataJson = clientDataJson,
+                // ES256 signatures travel as an ASN.1 DER SEQUENCE, not as the
+                // raw r||s pair .NET produces by default. Asking the BCL for the
+                // DER form beats assembling the encoding here.
+                Signature = _key.SignData(
+                    signedPayload,
+                    HashAlgorithmName.SHA256,
+                    DSASignatureFormat.Rfc3279DerSequence),
+                UserHandle = userHandle.ToByteArray(),
+            },
+            ClientExtensionResults = new AuthenticationExtensionsClientOutputs(),
+        };
+    }
+
+    private byte[] BuildAuthenticatorData(
+        string relyingPartyId,
+        uint signCount,
+        bool includeAttestedCredentialData)
     {
         const byte UserPresent = 0x01;
         const byte UserVerified = 0x04;
@@ -75,7 +140,8 @@ internal sealed class SoftwareAuthenticator
         const byte BackupStateFlag = 0x10;
         const byte AttestedCredentialData = 0x40;
 
-        var flags = (byte)(UserPresent | UserVerified | AttestedCredentialData
+        var flags = (byte)(UserPresent | UserVerified
+            | (includeAttestedCredentialData ? AttestedCredentialData : 0)
             | (BackupEligible ? BackupEligibleFlag : 0)
             | (BackupState ? BackupStateFlag : 0));
 
@@ -84,9 +150,16 @@ internal sealed class SoftwareAuthenticator
         buffer.Write(SHA256.HashData(Encoding.UTF8.GetBytes(relyingPartyId)));
         buffer.WriteByte(flags);
 
-        Span<byte> signCount = stackalloc byte[4];
-        System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(signCount, SignCount);
-        buffer.Write(signCount);
+        Span<byte> counter = stackalloc byte[4];
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(counter, signCount);
+        buffer.Write(counter);
+
+        // Assertions carry no attested credential data; the AT flag above is
+        // cleared for them and everything below is registration-only.
+        if (!includeAttestedCredentialData)
+        {
+            return buffer.ToArray();
+        }
 
         // Big-endian, per the WebAuthn encoding of the AAGUID. Guid.ToByteArray()
         // without the flag emits the first three groups little-endian, which

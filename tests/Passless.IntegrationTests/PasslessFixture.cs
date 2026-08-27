@@ -101,6 +101,7 @@ public sealed class PasslessApiFactory(
         builder.UseSetting("WebAuthn:RelyingPartyName", "Passless (tests)");
         builder.UseSetting("WebAuthn:Origins:0", Origin);
         builder.UseSetting("WebAuthn:ChallengeTimeToLive", "00:02:00");
+        builder.UseSetting("WebAuthn:DecoyKey", "cGFzc2xlc3MtaW50ZWdyYXRpb24tdGVzdC1kZWNveS1rZXktMzJi");
 
         foreach (var (key, value) in settings ?? new Dictionary<string, string>())
         {

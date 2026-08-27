@@ -29,4 +29,22 @@ public sealed class WebAuthnOptions
     /// the window in which a captured challenge is worth anything.
     /// </summary>
     public TimeSpan ChallengeTimeToLive { get; set; } = TimeSpan.FromMinutes(2);
+
+    /// <summary>
+    /// Base64 key used to derive the decoy credential descriptors returned for
+    /// usernames that do not exist.
+    ///
+    /// Not a secret in the sense a signing key is: disclosing it lets an
+    /// attacker recompute the decoys and so restores the account oracle this
+    /// closes, but it protects no data and signs nothing. It still belongs in
+    /// the environment rather than in source, and it must not be shared between
+    /// deployments.
+    /// </summary>
+    [Required]
+    public string DecoyKey { get; set; } = string.Empty;
+
+    private byte[]? _decoyKeyBytes;
+
+    /// <summary>Decoded once; validated at startup, so this cannot throw later.</summary>
+    public byte[] DecoyKeyBytes => _decoyKeyBytes ??= Convert.FromBase64String(DecoyKey);
 }

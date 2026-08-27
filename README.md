@@ -32,10 +32,12 @@ Four things, each of which is the reason the repository exists:
    CDP virtual authenticator, so both the happy path and the rejection paths are
    covered without a human touching a fingerprint sensor.
 
-> **Status: in progress.** The registration half of (1) is implemented —
-> ceremony, single-use challenges, explicit origin and RP ID validation, and the
-> authenticator metadata behind (3). Assertion, (2) and (4) are not built yet.
-> Each item gets a link to its code and its tests as it lands.
+> **Status: in progress.** (1) is complete — both ceremonies, single-use
+> challenges, explicit origin and RP ID validation, and signature counter
+> handling that tolerates authenticators which never count. Sessions and token
+> families are created on sign-in; token rotation (2) is the next step, and (4)
+> is not built yet. See [docs/assertion-ceremony.md](docs/assertion-ceremony.md)
+> for the sequence diagram.
 
 ## Security properties
 
