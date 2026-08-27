@@ -1,6 +1,7 @@
 using System.Security.Cryptography.X509Certificates;
 using Fido2NetLib;
 using Microsoft.Extensions.Options;
+using Passless.Api.Features.Authentication;
 using Passless.Api.Features.Registration;
 using Passless.Api.Features.WebAuthn;
 using Passless.Infrastructure;
@@ -43,6 +44,7 @@ builder.Services.AddSingleton<IFido2>(serviceProvider =>
 });
 
 builder.Services.AddScoped<RegistrationService>();
+builder.Services.AddScoped<AuthenticationService>();
 
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
@@ -58,6 +60,7 @@ app.UseStatusCodePages();
 // readiness checks land with the endpoints that depend on them.
 app.MapHealthChecks("/health");
 app.MapRegistration();
+app.MapAuthentication();
 
 app.Run();
 
