@@ -45,9 +45,11 @@ public sealed class AuthenticationTests(PasslessFixture fixture)
         Assert.Equal(account.UserId, family.UserId);
         Assert.False(family.IsInvalidated);
 
-        // Nothing token-shaped comes back yet.
-        Assert.False(body.TryGetProperty("accessToken", out _));
+        // An access token comes back in the body; the refresh token does not,
+        // because it travels only as an HttpOnly cookie.
+        Assert.False(string.IsNullOrEmpty(body.GetProperty("accessToken").GetString()));
         Assert.False(body.TryGetProperty("refreshToken", out _));
+        Assert.DoesNotContain("plrt_", body.ToString(), StringComparison.Ordinal);
 
         var credential = await db.Credentials.SingleAsync(c => c.UserId == account.UserId);
         Assert.NotNull(credential.LastUsedAt);

@@ -3,8 +3,10 @@ using Fido2NetLib;
 using Microsoft.Extensions.Options;
 using Passless.Api.Features.Authentication;
 using Passless.Api.Features.Registration;
+using Passless.Api.Features.Tokens;
 using Passless.Api.Features.WebAuthn;
 using Passless.Infrastructure;
+using Passless.Infrastructure.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +24,11 @@ builder.Services
     .ValidateOnStart();
 
 builder.Services.AddSingleton<IValidateOptions<WebAuthnOptions>, WebAuthnOptionsValidator>();
+
+builder.Services
+    .AddOptions<TokenOptions>()
+    .Bind(builder.Configuration.GetSection(TokenOptions.SectionName))
+    .ValidateOnStart();
 
 builder.Services.AddSingleton<IFido2>(serviceProvider =>
 {
@@ -61,6 +68,7 @@ app.UseStatusCodePages();
 app.MapHealthChecks("/health");
 app.MapRegistration();
 app.MapAuthentication();
+app.MapTokens();
 
 app.Run();
 

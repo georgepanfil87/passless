@@ -19,6 +19,7 @@
          Design package brings 8.0.30, and without a pin the two projects compile
          against different assembly versions of the same library. -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="8.0.30" />
+    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.22.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.30" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.30" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />

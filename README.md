@@ -32,12 +32,13 @@ Four things, each of which is the reason the repository exists:
    CDP virtual authenticator, so both the happy path and the rejection paths are
    covered without a human touching a fingerprint sensor.
 
-> **Status: in progress.** (1) is complete — both ceremonies, single-use
-> challenges, explicit origin and RP ID validation, and signature counter
-> handling that tolerates authenticators which never count. Sessions and token
-> families are created on sign-in; token rotation (2) is the next step, and (4)
-> is not built yet. See [docs/assertion-ceremony.md](docs/assertion-ceremony.md)
-> for the sequence diagram.
+> **Status: in progress.** (1) and (2) are complete — both WebAuthn ceremonies
+> with single-use challenges, explicit origin and RP ID validation and signature
+> counter handling; and refresh token rotation with family-wide reuse detection.
+> Per-device session listing and revocation (3) has its data model but no
+> endpoints yet, and (4) is not built. See
+> [docs/assertion-ceremony.md](docs/assertion-ceremony.md) for the assertion
+> sequence diagram.
 
 ## Security properties
 
