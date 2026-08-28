@@ -141,6 +141,21 @@ internal sealed class TokenService(
         var expiresAt = now + settings.RefreshTokenLifetime;
 
         db.RefreshTokens.Add(new RefreshToken(replacementId, family.Id, hash, now, expiresAt));
+
+        // Last-seen advances on rotation, not on every authenticated request.
+        //
+        // The tradeoff is deliberate and it is accuracy against cost. Touching
+        // it per request would mean a write on every single call the product
+        // ever serves -- turning an endpoint that reads nothing into one that
+        // writes a row, and putting every request behind the same handful of
+        // session rows. Doing it on rotation costs one write per access-token
+        // lifetime instead.
+        //
+        // What this buys is a value that can lag by up to that lifetime, five
+        // minutes by default. That is fine for what the field is for: helping
+        // somebody recognise a device in a list, and spot one they do not
+        // recognise. It would not be fine for anything that needed to know
+        // whether a session is active *right now*, and nothing here does.
         session.Touch(now);
 
         audit.Enlist(new AuditEntry(

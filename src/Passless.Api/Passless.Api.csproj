@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Fido2" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,8 +1,11 @@
 using System.Security.Cryptography.X509Certificates;
 using Fido2NetLib;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Passless.Api.Features.Auth;
 using Passless.Api.Features.Authentication;
 using Passless.Api.Features.Registration;
+using Passless.Api.Features.Sessions;
 using Passless.Api.Features.Tokens;
 using Passless.Api.Features.WebAuthn;
 using Passless.Infrastructure;
@@ -52,6 +55,11 @@ builder.Services.AddSingleton<IFido2>(serviceProvider =>
 
 builder.Services.AddScoped<RegistrationService>();
 builder.Services.AddScoped<AuthenticationService>();
+builder.Services.AddScoped<SessionService>();
+
+builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>, ConfigureJwtBearer>();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
+builder.Services.AddAuthorization();
 
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
@@ -61,6 +69,9 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 // Liveness only, still. The database is now wired but nothing serves traffic
 // from it yet, and a probe that reports "healthy" on the strength of a
 // connection the application never uses is worse than no probe at all. The
@@ -69,6 +80,7 @@ app.MapHealthChecks("/health");
 app.MapRegistration();
 app.MapAuthentication();
 app.MapTokens();
+app.MapSessions();
 
 app.Run();
 

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Passless.Api.Features.WebAuthn;
 using Passless.Core.Abstractions;
 using Passless.Core.Entities;
+using Passless.Core.Sessions;
 using Passless.Infrastructure;
 
 namespace Passless.Api.Features.Authentication;
@@ -326,13 +327,8 @@ internal sealed class AuthenticationService(
             .Select(t => t!.Value)
             .ToArray();
 
-    private static string DeviceLabelFor(HttpContext http)
-    {
-        var userAgent = http.Request.Headers.UserAgent.ToString();
-        return string.IsNullOrWhiteSpace(userAgent)
-            ? "Unknown device"
-            : userAgent[..Math.Min(userAgent.Length, 128)];
-    }
+    private static string DeviceLabelFor(HttpContext http) =>
+        DeviceLabel.FromUserAgent(http.Request.Headers.UserAgent.ToString());
 
     private async Task<AuthenticationOutcome> FailAsync(
         AuthenticationFailure failure,

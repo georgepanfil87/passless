@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Passless.Core.Abstractions;
 using Passless.Infrastructure.Auditing;
 using Passless.Infrastructure.Challenges;
+using Passless.Infrastructure.Sessions;
 using Passless.Infrastructure.Tokens;
 using StackExchange.Redis;
 
@@ -28,6 +29,9 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IValidateOptions<TokenOptions>, TokenOptionsValidator>();
         services.AddSingleton<AccessTokenIssuer>();
         services.AddScoped<ITokenService, TokenService>();
+
+        services.AddSingleton<ISessionRevocationCache, RedisSessionRevocationCache>();
+        services.AddSingleton<ILocationResolver, DefaultLocationResolver>();
 
         return services;
     }

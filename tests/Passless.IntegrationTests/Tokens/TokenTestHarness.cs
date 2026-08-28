@@ -14,13 +14,22 @@ internal sealed record SignInResult(
     Guid SessionId,
     Guid FamilyId,
     string RefreshToken,
-    string ResponseBody);
+    string ResponseBody,
+    string Username,
+    SoftwareAuthenticator Authenticator,
+    uint SignCount);
 
 /// <summary>Registers an account and signs it in, returning the first token pair.</summary>
 internal sealed class TokenTestHarness(PasslessFixture fixture)
 {
-    public async Task<SignInResult> SignInAsync(HttpClient client)
+    private const string DefaultUserAgent =
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+        + "(KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36";
+
+    public async Task<SignInResult> SignInAsync(HttpClient client, string? userAgent = null)
     {
+        UseUserAgent(client, userAgent ?? DefaultUserAgent);
+
         var authenticator = new SoftwareAuthenticator();
         var username = $"user-{Guid.NewGuid():N}@example.test";
 
@@ -34,24 +43,28 @@ internal sealed class TokenTestHarness(PasslessFixture fixture)
         }
 
         var userId = await UserIdAsync(username);
+        return await LogInAsync(client, username, userId, authenticator, signCount: 1);
+    }
 
-        var login = await AuthenticationDriver.BeginAsync(client, username);
-        using var response = await AuthenticationDriver.VerifyAsync(
+    /// <summary>
+    /// Signs the same account in again from a different device, producing a
+    /// second session and a second token family.
+    /// </summary>
+    public async Task<SignInResult> SignInAgainAsync(
+        HttpClient client,
+        SignInResult existing,
+        string userAgent)
+    {
+        UseUserAgent(client, userAgent);
+
+        // The counter has to advance or the assertion is refused as a possible
+        // clone, which is the rule working rather than the test misbehaving.
+        return await LogInAsync(
             client,
-            login.CeremonyCookie,
-            authenticator.Assert(login.Options, PasslessApiFactory.Origin, userId, signCount: 1));
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        var body = await response.Content.ReadAsStringAsync();
-        var sessionId = JsonSerializer.Deserialize<JsonElement>(body).GetProperty("sessionId").GetGuid();
-
-        return new SignInResult(
-            userId,
-            sessionId,
-            await FamilyIdAsync(sessionId),
-            TokenDriver.ExtractRefreshToken(response),
-            body);
+            existing.Username,
+            existing.UserId,
+            existing.Authenticator,
+            existing.SignCount + 1);
     }
 
     public async Task<TokenFamily> FamilyAsync(Guid familyId)
@@ -73,6 +86,41 @@ internal sealed class TokenTestHarness(PasslessFixture fixture)
         await using var scope = fixture.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<PasslessDbContext>();
         return await db.AuditEvents.AsNoTracking().Where(e => e.UserId == userId).ToListAsync();
+    }
+
+    private async Task<SignInResult> LogInAsync(
+        HttpClient client,
+        string username,
+        Guid userId,
+        SoftwareAuthenticator authenticator,
+        uint signCount)
+    {
+        var login = await AuthenticationDriver.BeginAsync(client, username);
+        using var response = await AuthenticationDriver.VerifyAsync(
+            client,
+            login.CeremonyCookie,
+            authenticator.Assert(login.Options, PasslessApiFactory.Origin, userId, signCount));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        var sessionId = JsonSerializer.Deserialize<JsonElement>(body).GetProperty("sessionId").GetGuid();
+
+        return new SignInResult(
+            userId,
+            sessionId,
+            await FamilyIdAsync(sessionId),
+            TokenDriver.ExtractRefreshToken(response),
+            body,
+            username,
+            authenticator,
+            signCount);
+    }
+
+    private static void UseUserAgent(HttpClient client, string userAgent)
+    {
+        client.DefaultRequestHeaders.Remove("User-Agent");
+        client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", userAgent);
     }
 
     private async Task<Guid> UserIdAsync(string username)

@@ -32,11 +32,11 @@ Four things, each of which is the reason the repository exists:
    CDP virtual authenticator, so both the happy path and the rejection paths are
    covered without a human touching a fingerprint sensor.
 
-> **Status: in progress.** (1) and (2) are complete — both WebAuthn ceremonies
-> with single-use challenges, explicit origin and RP ID validation and signature
-> counter handling; and refresh token rotation with family-wide reuse detection.
-> Per-device session listing and revocation (3) has its data model but no
-> endpoints yet, and (4) is not built. See
+> **Status: in progress.** (1), (2) and (3) are complete — both WebAuthn
+> ceremonies with single-use challenges, explicit origin and RP ID validation and
+> signature counter handling; refresh token rotation with family-wide reuse
+> detection; and per-device sessions that can be listed and individually revoked.
+> (4) is not built. See
 > [docs/assertion-ceremony.md](docs/assertion-ceremony.md) for the assertion
 > sequence diagram.
 
@@ -54,6 +54,29 @@ rejected.
 - Reuse of a consumed refresh token invalidates the whole token family.
 - All secret comparisons are timing-safe.
 - No secret, token or credential public key appears in a log line.
+- Revoking a session stops its access token within a bounded, stated window.
+
+### How long a revoked session keeps working
+
+An access token is a signed bearer JWT, so it cannot be withdrawn once issued.
+Revocation is therefore split in two, and the two halves have different
+guarantees, which is worth being exact about:
+
+**Refresh tokens die immediately and unconditionally.** Revoking a session
+invalidates its token family in Postgres, in the same transaction. No new access
+token can be minted for that session afterwards, whatever else is happening.
+
+**Access tokens already issued are rejected on their next request.** Every
+authenticated request checks a revocation list in Redis keyed by session id;
+entries expire after the access-token lifetime, at which point any token naming
+that session has expired anyway.
+
+If that cache is unreachable the API **fails open** and the bound degrades to the
+access-token lifetime — **five minutes by default**, set by
+`Tokens:AccessTokenLifetime`. That is the same guarantee the system would give
+with no cache at all, and it is preferred to failing closed, which would turn a
+cache outage into a total authentication outage. The degradation is logged at
+warning level.
 
 Cryptographic primitives are **not** hand-rolled. CBOR decoding, COSE key parsing
 and attestation chain verification come from
