@@ -44,6 +44,8 @@ public enum AuditEventType
 
     RefreshTokenIssued,
     RefreshTokenRotated,
+    /// <summary>A refresh was refused; metadata carries the reason.</summary>
+    RefreshTokenRejected,
     RefreshTokenReuseDetected,
     TokenFamilyInvalidated,
 

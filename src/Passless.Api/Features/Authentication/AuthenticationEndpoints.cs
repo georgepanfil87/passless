@@ -1,4 +1,5 @@
 using Fido2NetLib;
+using Passless.Api.Features.Tokens;
 
 namespace Passless.Api.Features.Authentication;
 
@@ -33,9 +34,18 @@ internal static class AuthenticationEndpoints
             // One body for every failure. An unknown credential, a stale
             // challenge, a disabled account and a cloned authenticator are the
             // same response; only the audit log tells them apart.
-            return outcome.Succeeded
-                ? Results.Ok(new CompleteAuthenticationResponse(outcome.SessionId))
-                : Results.BadRequest(new { error = "authentication_failed" });
+            if (!outcome.Succeeded)
+            {
+                return Results.BadRequest(new { error = "authentication_failed" });
+            }
+
+            var issued = outcome.Tokens!;
+            RefreshTokenCookie.Issue(http.Response, issued.RefreshToken, issued.RefreshTokenExpiresAt);
+
+            return Results.Ok(new CompleteAuthenticationResponse(
+                outcome.SessionId,
+                issued.AccessToken,
+                issued.AccessTokenExpiresAt));
         });
 
         return app;

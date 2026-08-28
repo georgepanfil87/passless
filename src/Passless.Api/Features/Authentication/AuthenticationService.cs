@@ -13,17 +13,21 @@ namespace Passless.Api.Features.Authentication;
 internal readonly record struct AuthenticationOutcome(
     bool Succeeded,
     Guid SessionId,
+    IssuedTokens? Tokens,
     AuthenticationFailure? Failure)
 {
-    public static AuthenticationOutcome Success(Guid sessionId) => new(true, sessionId, null);
+    public static AuthenticationOutcome Success(Guid sessionId, IssuedTokens tokens) =>
+        new(true, sessionId, tokens, null);
 
-    public static AuthenticationOutcome Failed(AuthenticationFailure failure) => new(false, default, failure);
+    public static AuthenticationOutcome Failed(AuthenticationFailure failure) =>
+        new(false, default, null, failure);
 }
 
 internal sealed class AuthenticationService(
     IFido2 fido2,
     IChallengeStore challenges,
     IAuditLog audit,
+    ITokenService tokens,
     PasslessDbContext db,
     IOptions<WebAuthnOptions> webAuthn,
     TimeProvider time)
@@ -243,12 +247,16 @@ internal sealed class AuthenticationService(
             Ip: http.Connection.RemoteIpAddress,
             UserAgent: http.Request.Headers.UserAgent.ToString()));
 
-        // The session, its token family, the counter update and both audit rows
-        // commit together. TODO(step 6): mint the first refresh token into this
-        // same transaction, so a session can never exist without its lineage.
+        // Enlisted rather than saved separately, so the first refresh token of
+        // the family lands in the same transaction as the session and the family
+        // itself. A session that existed without its lineage, or a lineage with
+        // no first token, would both be states nothing downstream knows how to
+        // recover from.
+        var issued = tokens.EnlistInitialTokens(user.Id, session.Id, family.Id);
+
         await db.SaveChangesAsync(cancellationToken);
 
-        return AuthenticationOutcome.Success(session.Id);
+        return AuthenticationOutcome.Success(session.Id, issued);
     }
 
     /// <summary>

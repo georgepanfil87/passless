@@ -8,7 +8,11 @@ namespace Passless.Api.Features.Authentication;
 public sealed record BeginAuthenticationRequest(string? Username);
 
 /// <remarks>
-/// Carries no tokens. Rotation lands next; until then a caller receives proof
-/// that a session exists and nothing that could be mistaken for a credential.
+/// The refresh token is absent on purpose — it travels as an HttpOnly cookie so
+/// that no script can read it. Only the short-lived access token is returned
+/// here, for the client to hold in memory.
 /// </remarks>
-public sealed record CompleteAuthenticationResponse(Guid SessionId);
+public sealed record CompleteAuthenticationResponse(
+    Guid SessionId,
+    string AccessToken,
+    DateTimeOffset AccessTokenExpiresAt);
